@@ -1,87 +1,79 @@
-/* ast.h */
 #ifndef AST_H
 #define AST_H
 
-typedef enum {
-    NODE_PROGRAM,
-    NODE_STATEMENT_LIST,
-    NODE_EXPRESSION_STMT,
-    NODE_ASSIGNMENT,
-    NODE_COMPOUND_ASSIGNMENT,
-    NODE_IF,
-    NODE_WHILE,
-    NODE_FOR,
-    NODE_FUNCTION_DEF,
-    NODE_RETURN,
-    NODE_IMPORT,
-    NODE_BINARY_OP,
-    NODE_UNARY_OP,
-    NODE_CALL,
-    NODE_IDENTIFIER,
-    NODE_NUMBER,
-    NODE_STRING,
-    NODE_BOOLEAN,
-    NODE_NONE,
-    NODE_LIST,
-    NODE_DICT
-} NodeType;
+#include <stdio.h>
 
-typedef struct ASTNode {
-    NodeType type;
-    union {
-        // For numbers
-        double number_value;
-        
-        // For strings and identifiers
-        char *string_value;
-        
-        // For boolean values
-        int boolean_value;
-        
-        // For binary operations
-        struct {
-            int operator;
-            struct ASTNode *left;
-            struct ASTNode *right;
-        } binary_op;
-        
-        // For unary operations
-        struct {
-            int operator;
-            struct ASTNode *operand;
-        } unary_op;
-        
-        // For if statements
-        struct {
-            struct ASTNode *condition;
-            struct ASTNode *then_body;
-            struct ASTNode *else_body;
-        } if_stmt;
-        
-        // For while loops
-        struct {
-            struct ASTNode *condition;
-            struct ASTNode *body;
-        } while_loop;
-        
-        // For function definitions
-        struct {
-            char *name;
-            struct ASTNode *params;
-            struct ASTNode *body;
-        } function_def;
-        
-        // Other node types...
-    } data;
+/* ASTNodeType expanded comment:
+ * - All value-based nodes (int, float, bool, string, identifier) use `value`.
+ * - Integer/float literals also use intValue/floatValue for direct usage (for codegen).
+ * - Bool literals use boolValue.
+ */
+typedef enum
+{
+    AST_PROGRAM = 0,
+    AST_STATEMENT_LIST,
+    AST_EXPR_STMT,
+    AST_ASSIGNMENT,
+    AST_PLUS_ASSIGN,
+    AST_MINUS_ASSIGN,
+    AST_TIMES_ASSIGN,
+    AST_DIVIDE_ASSIGN,
+    AST_IF,
+    AST_IF_ELIF,
+    AST_IF_ELSE,
+    AST_IF_ELIF_ELSE,
+    AST_ELIF,
+    AST_WHILE,
+    AST_FOR,
+    AST_FOR_RANGE,
+    AST_FUNCTION_DEF,
+    AST_RETURN,
+    AST_IMPORT,
+    AST_PARAMETERS,
+    AST_OR,
+    AST_AND,
+    AST_EQ,
+    AST_NEQ,
+    AST_LT,
+    AST_GT,
+    AST_LE,
+    AST_GE,
+    AST_ADD,
+    AST_SUB,
+    AST_MUL,
+    AST_DIV,
+    AST_MOD,
+    AST_NEG,
+    AST_NOT,
+    AST_CALL,
+    AST_ARGUMENTS,
+    AST_INT,
+    AST_FLOAT,
+    AST_STRING,
+    AST_BOOL,
+    AST_NONE,
+    AST_IDENTIFIER,
+    AST_LIST,
+    AST_DICT
+} ASTNodeType;
+
+typedef struct ASTNode
+{
+    ASTNodeType type;
+    char *value;       // For names and all literal string representations
+    int intValue;      // For integer literals (AST_INT)
+    double floatValue; // For floats (AST_FLOAT)
+    int boolValue;     // For booleans (AST_BOOL)
+    struct ASTNode **children;
+    int children_count;
 } ASTNode;
 
-// Function declarations for creating AST nodes
-ASTNode *create_statement_list(ASTNode *stmt, ASTNode *next);
-ASTNode *create_expression_stmt(ASTNode *expr);
-ASTNode *create_assignment(char *id, ASTNode *expr);
-ASTNode *create_compound_assignment(int op, char *id, ASTNode *expr);
-// More node creation functions...
-
-extern ASTNode *program_root;
+ASTNode *create_node(ASTNodeType type, char *value);
+ASTNode *create_int_node(int val);
+ASTNode *create_float_node(double val);
+ASTNode *create_bool_node(int val);
+void add_child(ASTNode *parent, ASTNode *child);
+void free_ast(ASTNode *node);
+void print_ast(ASTNode *node, int indent);
 
 #endif

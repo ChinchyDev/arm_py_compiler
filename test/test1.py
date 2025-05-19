@@ -1,17 +1,10 @@
-# max3.py
-a = 10
-b = 20
-c = 15
+x = 1
+y = 3
+z = x + y
 
-if a > b:
-    if a > c:
-        max = a
-    else:
-        max = c
+if z > 2:
+    z = z - 1
 else:
-    if b > c:
-        max = b
-    else:
-        max = c
+    z = z + 1
 
-print(max)
+print(z)

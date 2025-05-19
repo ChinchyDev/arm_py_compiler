@@ -8,7 +8,7 @@ extern FILE *yyin;
 extern int yyparse(void);
 extern ASTNode *ast_root;
 
-void yyerror(const char *s);
+extern void yyerror(const char *s);
 
 int main(int argc, char **argv)
 {
@@ -41,7 +41,7 @@ int main(int argc, char **argv)
     return 0;
 }
 
-void yyerror(const char *s)
+/*void yyerror(const char *s)
 {
     fprintf(stderr, "Error: %s\n", s);
-}
+}*/

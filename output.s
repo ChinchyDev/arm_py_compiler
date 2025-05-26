@@ -72,10 +72,10 @@ Type: 0
   Type: 19
     Type: 43  val:alert
 ; Generated symbol table
+; Generated ARM assembly
 
 ; Symbol Table (Variable -> Stack Offset)
 
-; Generated ARM assembly
 .section .text
 .global _start
 _start:
@@ -90,7 +90,13 @@ _start:
   mov r0, #0
   str r0, [sp, #232]  @ Store to variable 'alert'
   @ If condition
-  @ Unhandled AST node type 28
+  ldr r0, [sp, #224]  @ Load identifier 'temperature'
+  push {r0}
+  ldr r0, [sp, #228]  @ Load identifier 'threshold'
+  pop {r1}
+  cmp r1, r0
+  movgt r0, #1
+  movle r0, #0
   cmp r0, #0
   beq ifend_1
   @ Assignment to variable 'alert'

@@ -59,19 +59,13 @@ static char *new_label(const char *prefix)
 
 void codegen_expression(ASTNode *node);
 
-void print_symbol_table() {
-    printf("\n; Symbol Table (Variable -> Stack Offset)\n");
-    for (int i = 0; i < symcount; i++) {
-        printf("; %s => [sp, #%d]\n", symtable[i].name, symtable[i].offset);
-    }
-    printf("\n");
-}
-
 
 void codegen(ASTNode *root)
 {
     if (!root)
         return;
+    
+    print_symbol_table();
 
     printf(".section .text\n");
     printf(".global _start\n");
@@ -282,5 +276,74 @@ void codegen_expression(ASTNode *node)
         }
         break;
     }
+        case AST_GT:
+    case AST_LT:
+    case AST_EQ:
+    case AST_NEQ:
+    {
+        codegen_expression(node->children[0]); // left operand
+        printf("  push {r0}\n");
+        codegen_expression(node->children[1]); // right operand
+        printf("  pop {r1}\n");
+        printf("  cmp r1, r0\n");
+
+        switch (node->type)
+        {
+        case AST_GT:
+            printf("  movgt r0, #1\n");
+            printf("  movle r0, #0\n");
+            break;
+        case AST_LT:
+            printf("  movlt r0, #1\n");
+            printf("  movge r0, #0\n");
+            break;
+        case AST_EQ:
+            printf("  moveq r0, #1\n");
+            printf("  movne r0, #0\n");
+            break;
+        case AST_NEQ:
+            printf("  movne r0, #1\n");
+            printf("  moveq r0, #0\n");
+            break;
+        default:
+            break;
+        }
+        break;
+    }
+
+        case AST_AND:
+    case AST_OR:
+    {
+        char *short_circuit = new_label(node->type == AST_AND ? "false_result" : "true_result");
+        char *end_label = new_label("end_logic");
+
+        codegen_expression(node->children[0]); // left operand
+        printf("  cmp r0, #0\n");
+
+        if (node->type == AST_AND) {
+            printf("  beq %s\n", short_circuit);  // If left is 0 (false), skip and return false
+        } else {
+            printf("  bne %s\n", short_circuit);  // If left is 1 (true), skip and return true
+        }
+
+        codegen_expression(node->children[1]); // right operand
+        printf("  b %s\n", end_label);          // Done, jump to end
+
+        printf("%s:\n", short_circuit);
+        printf("  mov r0, #%d\n", node->type == AST_AND ? 0 : 1); // Set short-circuit result
+
+        printf("%s:\n", end_label);
+        break;
+    }
+
     }
 }
+
+void print_symbol_table(void) {
+    printf("\n; Symbol Table (Variable -> Stack Offset)\n");
+    for (int i = 0; i < symcount; i++) {
+        printf("; %s -> [sp, #%d]\n", symtable[i].name, symtable[i].offset);
+    }
+    printf("\n");
+}
+

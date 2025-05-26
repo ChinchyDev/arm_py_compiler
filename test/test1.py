@@ -3,7 +3,6 @@ y = 3
 z = x + y
 
 if z > 3:
-   print (z)
+    z = z * 2
 else:
-   print (y)
-
+    z = z - 1

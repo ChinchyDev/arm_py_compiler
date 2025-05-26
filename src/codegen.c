@@ -113,6 +113,14 @@ void codegen_expression(ASTNode *node)
             codegen_expression(node->children[i]);
         }
         break;
+    case AST_ELSE:
+        // Generate code for else block — same as a plain statement block
+        printf("  @ Else block\n");
+        for (int i = 0; i < node->children_count; i++)
+        {
+            codegen_expression(node->children[i]);
+        }
+        break;
 
     case AST_WHILE:
     {

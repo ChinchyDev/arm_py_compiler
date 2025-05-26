@@ -355,8 +355,8 @@ static void yynoreturn yy_fatal_error ( const char* msg  );
 	(yy_hold_char) = *yy_cp; \
 	*yy_cp = '\0'; \
 	(yy_c_buf_p) = yy_cp;
-#define YY_NUM_RULES 49
-#define YY_END_OF_BUFFER 50
+#define YY_NUM_RULES 50
+#define YY_END_OF_BUFFER 51
 /* This struct is not used in this scanner,
    but its presence is necessary. */
 struct yy_trans_info
@@ -366,7 +366,7 @@ struct yy_trans_info
 	};
 static const flex_int16_t yy_accept[106] =
     {   0,
-        0,    0,   50,   48,   47,    2,   48,   48,   24,   48,
+        0,    0,   51,   48,   47,    2,   48,   48,   24,   48,
        36,   37,   22,   20,   43,   21,   23,   44,   42,   32,
        25,   33,   45,   45,   45,   45,   38,   39,   45,   45,
        45,   45,   45,   45,   45,   45,   45,   45,   40,   41,
@@ -1087,14 +1087,34 @@ YY_RULE_SETUP
 #line 121 "src/lexer.l"
 { printf("Unknown character: %s\n", yytext); }
 	YY_BREAK
+case YY_STATE_EOF(INITIAL):
+#line 122 "src/lexer.l"
+{
+    while (stack_top > 1) {
+        stack_top--;
+        pending_dedent_count++;
+    }
+    if (pending_dedent_count > 0) {
+        pending_dedent_count--;
+        return DEDENT;
+    }
+    return 0;
+}
+	YY_BREAK
 case 49:
 YY_RULE_SETUP
-#line 123 "src/lexer.l"
+#line 135 "src/lexer.l"
+{ 
+    printf("[debug raw char] '%s' at line %d\n", yytext, line_num); 
+    printf("Unknown character: %s\n", yytext); 
+}
+	YY_BREAK
+case 50:
+YY_RULE_SETUP
+#line 140 "src/lexer.l"
 ECHO;
 	YY_BREAK
-#line 1096 "src/lex.yy.c"
-case YY_STATE_EOF(INITIAL):
-	yyterminate();
+#line 1118 "src/lex.yy.c"
 
 	case YY_END_OF_BUFFER:
 		{
@@ -2097,56 +2117,77 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 123 "src/lexer.l"
+#line 140 "src/lexer.l"
 
 
 // Function to handle indentation tracking and queuing INDENT/DEDENT tokens
 void update_indentation(int new_indent) {
-    if (new_indent > indent_stack[stack_top-1]) {
-        // Indentation increase: push to stack and queue INDENT
+    int current_indent = indent_stack[stack_top - 1];
+    printf("[debug] line %d: current_indent=%d, new_indent=%d, stack_top=%d\n", line_num, current_indent, new_indent, stack_top);
+    
+    if (new_indent > current_indent) {
         indent_stack[stack_top++] = new_indent;
         pending_token = INDENT;
-    } else if (new_indent < indent_stack[stack_top-1]) {
-        // Indentation decrease: count how many levels to dedent
-        int i = stack_top - 1;
-        while (i > 0 && new_indent < indent_stack[i]) {
-            i--;
+    } else if (new_indent < current_indent) {
+        while (stack_top > 1 && new_indent < indent_stack[stack_top - 1]) {
+            stack_top--;
             pending_dedent_count++;
         }
-        
-        // Check for indentation error
-        if (new_indent != indent_stack[i]) {
+
+        if (indent_stack[stack_top - 1] != new_indent) {
             printf("Error: Inconsistent indentation at line %d\n", line_num);
         }
-        
-        // Update stack_top
-        stack_top = i + 1;
-        
-        // Queue the first DEDENT
-        pending_token = DEDENT;
+
+        // Emit only one DEDENT now, leave the rest for later
+        if (pending_dedent_count > 0 && pending_token == 0) {
+            pending_token = DEDENT;
+            pending_dedent_count--;
+        }
     }
-    // If same indent level, no special token is queued
 }
+
+const char* tokname(int tok) {
+    switch (tok) {
+        case IF: return "IF";
+        case ELSE: return "ELSE";
+        case ELIF: return "ELIF";
+        case INDENT: return "INDENT";
+        case DEDENT: return "DEDENT";
+        case NEWLINE: return "NEWLINE";
+        case IDENTIFIER: return "IDENTIFIER";
+        case INT_NUM: return "INT_NUM";
+        case ASSIGN: return "ASSIGN";
+        case PLUS: return "PLUS";
+        case TIMES: return "TIMES";
+        case GT: return "GT";
+        case PRINT: return "PRINT";
+        case COLON: return "COLON";
+        default: return "OTHER";
+    }
+}
+
+
 
 // This is the function that the parser will call to get tokens
 int get_token() {
-    if (pending_dedent_count > 0) {
-        pending_dedent_count--;
-        return DEDENT;
-    } else if (pending_token != 0) {
+    if (pending_token != 0) {
         int token = pending_token;
         pending_token = 0;
+        printf("[token] %s\n", tokname(token));
         return token;
     }
-    return yylex();
+
+    if (pending_dedent_count > 0) {
+        pending_dedent_count--;
+        printf("[token] DEDENT\n");
+        return DEDENT;
+    }
+
+    int tok = yylex();
+    printf("[token] %s\n", tokname(tok));
+    return tok;
 }
 
-#ifdef TEST_LEXER
-int main() {
-    int token;
-    while ((token = get_token()) != 0) {
-        printf("TOKEN: %d\n", token);
-    }
-    return 0;
-}
-#endif
+
+
+

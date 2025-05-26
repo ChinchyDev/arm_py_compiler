@@ -100,7 +100,8 @@ extern int yydebug;
     LBRACE = 301,                  /* LBRACE  */
     RBRACE = 302,                  /* RBRACE  */
     COLON = 303,                   /* COLON  */
-    COMMA = 304                    /* COMMA  */
+    COMMA = 304,                   /* COMMA  */
+    IFX = 305                      /* IFX  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -117,7 +118,7 @@ union YYSTYPE
     char *sval;
     struct ASTNode *node;
 
-#line 121 "src/parser.tab.h"
+#line 122 "src/parser.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

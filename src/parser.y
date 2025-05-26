@@ -38,25 +38,40 @@ ASTNode *ast_root = NULL;
 %type <node> if_stmt while_stmt for_stmt function_def return_stmt import_stmt print_stmt
 %type <node> expression logical_or logical_and equality comparison term factor
 %type <node> unary call primary list_expr dict_expr arguments parameters
-%type <node> elif_clauses else_clause suite
+%type <node> elif_else_opt suite
 
 %start program
+%nonassoc IFX  // For if statements to handle precedence
 
 %%
 
-program: statement_list          { ast_root = $1; }
-       | %empty                  { ast_root = create_node(AST_STATEMENT_LIST, NULL); }
-       ;
+program:
+    statement_list extra_newlines {
+        ast_root = $1;
+    }
+  | %empty {
+        ast_root = create_node(AST_STATEMENT_LIST, NULL);
+    }
+;
 
-statement_list: statement        { 
-                                   $$ = create_node(AST_STATEMENT_LIST, NULL); 
-                                   if ($1) add_child($$, $1); 
-                                 }
-              | statement_list statement { 
-                                   $$ = $1; 
-                                   if ($2) add_child($$, $2); 
-                                 }
-              ;
+extra_newlines:
+    %empty
+  | extra_newlines NEWLINE
+  | extra_newlines DEDENT
+;
+
+
+statement_list:
+    statement {
+        $$ = create_node(AST_STATEMENT_LIST, NULL);
+        if ($1) add_child($$, $1);
+    }
+  | statement_list statement {
+        $$ = $1;
+        if ($2) add_child($$, $2);
+    }
+;
+
 
 statement: expression_stmt       { $$ = $1; }
          | assignment_stmt       { $$ = $1; }
@@ -99,96 +114,69 @@ print_stmt: PRINT expression NEWLINE {
              $$ = create_node(AST_PRINT, NULL);
              add_child($$, $2);
            }
-          | PRINT IDENTIFIER NEWLINE {
-             $$ = create_node(AST_PRINT, NULL);
-             add_child($$, create_node(AST_IDENTIFIER, $2));
-           }
           ;
 
 /* Suite represents an indented block of code */
 suite: NEWLINE INDENT statement_list DEDENT { $$ = $3; }
      ;
 
-/* if statement with optional elif and else clauses */
-if_stmt: IF expression COLON suite { 
+/* Updated if statement rule */
+if_stmt: IF expression COLON suite elif_else_opt %prec IFX {
            $$ = create_node(AST_IF, NULL);
-           add_child($$, $2); // condition
-           add_child($$, $4); // body
-         }
-       | IF expression COLON suite elif_clauses {
-           $$ = create_node(AST_IF_ELIF, NULL);
-           add_child($$, $2); // if condition
-           add_child($$, $4); // if body
-           add_child($$, $5); // elif chain
-         }
-       | IF expression COLON suite else_clause {
-           $$ = create_node(AST_IF_ELSE, NULL);
-           add_child($$, $2); // condition
-           add_child($$, $4); // if body
-           add_child($$, $5); // else body
-         }
-       | IF expression COLON suite elif_clauses else_clause {
-           $$ = create_node(AST_IF_ELIF_ELSE, NULL);
-           add_child($$, $2); // if condition
-           add_child($$, $4); // if body
-           add_child($$, $5); // elif chain
-           add_child($$, $6); // else body
+           add_child($$, $2);
+           add_child($$, $4);
+           if ($5) add_child($$, $5);
          }
        ;
 
-elif_clauses: ELIF expression COLON suite {
-               $$ = create_node(AST_ELIF, NULL);
-               add_child($$, $2); // condition
-               add_child($$, $4); // body
-             }
-           | elif_clauses ELIF expression COLON suite {
-               $$ = $1;
-               ASTNode *elif_node = create_node(AST_ELIF, NULL);
-               add_child(elif_node, $3); // condition
-               add_child(elif_node, $5); // body
-               add_child($$, elif_node);
-             }
-           ;
-
-else_clause: ELSE COLON suite {
-              $$ = $3; // Just return the statements in the else block
-            }
-          ;
+elif_else_opt:
+         %empty { $$ = NULL; }
+       | ELIF expression COLON suite elif_else_opt {
+           $$ = create_node(AST_ELIF, NULL);
+           add_child($$, $2);
+           add_child($$, $4);
+           if ($5) add_child($$, $5);
+         }
+       | ELSE COLON suite {
+           $$ = create_node(AST_ELSE, NULL);
+           add_child($$, $3);
+         }
+       ;
 
 while_stmt: WHILE expression COLON suite {
              $$ = create_node(AST_WHILE, NULL);
-             add_child($$, $2); // condition
-             add_child($$, $4); // body
+             add_child($$, $2);
+             add_child($$, $4);
            }
           ;
 
 for_stmt: FOR IDENTIFIER IN expression COLON suite {
             $$ = create_node(AST_FOR, $2);
-            add_child($$, $4); // iterable
-            add_child($$, $6); // body
+            add_child($$, $4);
+            add_child($$, $6);
           }
         | FOR IDENTIFIER IN RANGE LPAREN expression RPAREN COLON suite {
             $$ = create_node(AST_FOR_RANGE, $2);
-            add_child($$, $6); // range expression
-            add_child($$, $9); // body
+            add_child($$, $6);
+            add_child($$, $9);
           }
         | FOR IDENTIFIER IN RANGE LPAREN expression COMMA expression RPAREN COLON suite {
             $$ = create_node(AST_FOR_RANGE, $2);
-            add_child($$, $6); // start
-            add_child($$, $8); // end
-            add_child($$, $11); // body
+            add_child($$, $6);
+            add_child($$, $8);
+            add_child($$, $11);
           }
         ;
 
 function_def: DEF IDENTIFIER LPAREN parameters RPAREN COLON suite {
                $$ = create_node(AST_FUNCTION_DEF, $2);
-               add_child($$, $4); // parameters
-               add_child($$, $7); // body
+               add_child($$, $4);
+               add_child($$, $7);
              }
            | DEF IDENTIFIER LPAREN RPAREN COLON suite {
                $$ = create_node(AST_FUNCTION_DEF, $2);
-               add_child($$, create_node(AST_PARAMETERS, NULL)); // empty parameters
-               add_child($$, $6); // body
+               add_child($$, create_node(AST_PARAMETERS, NULL));
+               add_child($$, $6);
              }
            ;
 
@@ -321,7 +309,7 @@ call: primary { $$ = $1; }
       }
     | IDENTIFIER LPAREN RPAREN {
         $$ = create_node(AST_CALL, $1);
-        add_child($$, create_node(AST_ARGUMENTS, NULL)); // empty args
+        add_child($$, create_node(AST_ARGUMENTS, NULL));
       }
     ;
 

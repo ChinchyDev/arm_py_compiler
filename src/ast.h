@@ -15,6 +15,7 @@ typedef enum
     AST_IF_ELSE,
     AST_IF_ELIF_ELSE,
     AST_ELIF,
+    AST_ELSE, // Added for else statement
     AST_WHILE,
     AST_FOR,
     AST_FOR_RANGE,

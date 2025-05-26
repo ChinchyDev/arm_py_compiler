@@ -62,6 +62,7 @@ INDENT      ^[ \t]+
 "def"               { return DEF; }
 "return"            { return RETURN; }
 "import"            { return IMPORT; }
+"print"             { return PRINT; }
 "True"              { yylval.bval = 1; return BOOL; }
 "False"             { yylval.bval = 0; return BOOL; }
 "None"              { return NONE; }
@@ -91,6 +92,7 @@ INDENT      ^[ \t]+
 "["                 { return LBRACKET; }
 "]"                 { return RBRACKET; }
 "{"                 { return LBRACE; }
+
 "}"                 { return RBRACE; }
 ":"                 { return COLON; }
 ","                 { return COMMA; }

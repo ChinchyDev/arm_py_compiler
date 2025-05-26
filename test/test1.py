@@ -2,9 +2,8 @@ x = 1
 y = 3
 z = x + y
 
-if z > 2:
-    z = z - 1
+if z > 3:
+   print (z)
 else:
-    z = z + 1
+   print (y)
 
-print(z)

@@ -27,7 +27,7 @@ ASTNode *ast_root = NULL;
 %token <bval> BOOL
 %token <sval> IDENTIFIER STRING
 %token NEWLINE INDENT DEDENT
-%token IF ELSE ELIF WHILE FOR IN DEF RETURN IMPORT NONE RANGE
+%token IF ELSE ELIF WHILE FOR IN DEF RETURN IMPORT NONE RANGE PRINT
 %token AND OR NOT
 %token PLUS MINUS TIMES DIVIDE MODULO
 %token ASSIGN PLUS_ASSIGN MINUS_ASSIGN TIMES_ASSIGN DIVIDE_ASSIGN
@@ -35,7 +35,7 @@ ASTNode *ast_root = NULL;
 %token LPAREN RPAREN LBRACKET RBRACKET LBRACE RBRACE COLON COMMA
 
 %type <node> program statement_list statement expression_stmt assignment_stmt
-%type <node> if_stmt while_stmt for_stmt function_def return_stmt import_stmt
+%type <node> if_stmt while_stmt for_stmt function_def return_stmt import_stmt print_stmt
 %type <node> expression logical_or logical_and equality comparison term factor
 %type <node> unary call primary list_expr dict_expr arguments parameters
 %type <node> elif_clauses else_clause suite
@@ -45,10 +45,17 @@ ASTNode *ast_root = NULL;
 %%
 
 program: statement_list          { ast_root = $1; }
+       | %empty                  { ast_root = create_node(AST_STATEMENT_LIST, NULL); }
        ;
 
-statement_list: statement        { $$ = create_node(AST_STATEMENT_LIST, NULL); add_child($$, $1); }
-              | statement_list statement { $$ = $1; add_child($$, $2); }
+statement_list: statement        { 
+                                   $$ = create_node(AST_STATEMENT_LIST, NULL); 
+                                   if ($1) add_child($$, $1); 
+                                 }
+              | statement_list statement { 
+                                   $$ = $1; 
+                                   if ($2) add_child($$, $2); 
+                                 }
               ;
 
 statement: expression_stmt       { $$ = $1; }
@@ -59,6 +66,7 @@ statement: expression_stmt       { $$ = $1; }
          | function_def          { $$ = $1; }
          | return_stmt           { $$ = $1; }
          | import_stmt           { $$ = $1; }
+         | print_stmt            { $$ = $1; }
          | NEWLINE               { $$ = NULL; } /* Handle empty lines */
          ;
 
@@ -86,6 +94,16 @@ assignment_stmt: IDENTIFIER ASSIGN expression NEWLINE {
                     add_child($$, $3);
                 }
                ;
+
+print_stmt: PRINT expression NEWLINE {
+             $$ = create_node(AST_PRINT, NULL);
+             add_child($$, $2);
+           }
+          | PRINT IDENTIFIER NEWLINE {
+             $$ = create_node(AST_PRINT, NULL);
+             add_child($$, create_node(AST_IDENTIFIER, $2));
+           }
+          ;
 
 /* Suite represents an indented block of code */
 suite: NEWLINE INDENT statement_list DEDENT { $$ = $3; }

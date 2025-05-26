@@ -1,4 +1,3 @@
-# bubble_sort.py
 arr = [5, 1, 4, 2, 8]
 n = 5
 i = 0

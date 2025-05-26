@@ -1,16 +1,8 @@
 #ifndef AST_H
 #define AST_H
 
-#include <stdio.h>
-
-/* ASTNodeType expanded comment:
- * - All value-based nodes (int, float, bool, string, identifier) use `value`.
- * - Integer/float literals also use intValue/floatValue for direct usage (for codegen).
- * - Bool literals use boolValue.
- */
 typedef enum
 {
-    AST_PROGRAM = 0,
     AST_STATEMENT_LIST,
     AST_EXPR_STMT,
     AST_ASSIGNMENT,
@@ -29,7 +21,10 @@ typedef enum
     AST_FUNCTION_DEF,
     AST_RETURN,
     AST_IMPORT,
+    AST_PRINT, // Added for print statement
     AST_PARAMETERS,
+    AST_ARGUMENTS,
+    AST_CALL,
     AST_OR,
     AST_AND,
     AST_EQ,
@@ -45,8 +40,6 @@ typedef enum
     AST_MOD,
     AST_NEG,
     AST_NOT,
-    AST_CALL,
-    AST_ARGUMENTS,
     AST_INT,
     AST_FLOAT,
     AST_STRING,
@@ -60,10 +53,10 @@ typedef enum
 typedef struct ASTNode
 {
     ASTNodeType type;
-    char *value;       // For names and all literal string representations
-    int intValue;      // For integer literals (AST_INT)
-    double floatValue; // For floats (AST_FLOAT)
-    int boolValue;     // For booleans (AST_BOOL)
+    char *value;
+    int intValue;
+    double floatValue;
+    int boolValue;
     struct ASTNode **children;
     int children_count;
 } ASTNode;

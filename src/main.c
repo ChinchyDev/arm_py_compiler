@@ -27,7 +27,12 @@ int main(int argc, char **argv)
 
     if (yyparse() == 0 && ast_root != NULL)
     {
-        print_ast(ast_root, 0);
+        printf("; Parsing successful, generating code...\n");
+        printf("; Generated AST:\n");
+        // Print the AST for debugging
+        print_ast(ast_root, 0);// Print the AST for debugging
+        printf("; Generated symbol table\n");
+        print_symbol_table();// Print the symbol table for debugging 
         // ast_root should be a AST_STATEMENT_LIST node as expected by new codegen
         printf("; Generated ARM assembly\n");
         codegen(ast_root); // Pass AST_STATEMENT_LIST as root node.

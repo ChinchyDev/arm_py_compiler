@@ -10,9 +10,7 @@
 [token] NEWLINE
 [token] IDENTIFIER
 [token] ASSIGN
-[token] IDENTIFIER
-[token] PLUS
-[token] IDENTIFIER
+[token] INT_NUM
 [debug] line 4: current_indent=0, new_indent=0, stack_top=1
 [token] NEWLINE
 [debug] line 5: current_indent=0, new_indent=0, stack_top=1
@@ -20,15 +18,13 @@
 [token] IF
 [token] IDENTIFIER
 [token] GT
-[token] INT_NUM
+[token] IDENTIFIER
 [token] COLON
 [debug] line 6: current_indent=0, new_indent=4, stack_top=1
 [token] NEWLINE
 [token] INDENT
 [token] IDENTIFIER
 [token] ASSIGN
-[token] IDENTIFIER
-[token] TIMES
 [token] INT_NUM
 [debug] line 7: current_indent=4, new_indent=0, stack_top=2
 [token] NEWLINE
@@ -40,82 +36,80 @@
 [token] INDENT
 [token] IDENTIFIER
 [token] ASSIGN
-[token] IDENTIFIER
-[token] OTHER
 [token] INT_NUM
 [debug] line 9: current_indent=4, new_indent=0, stack_top=2
 [token] NEWLINE
 [token] DEDENT
+[debug] line 10: current_indent=0, new_indent=0, stack_top=1
+[token] NEWLINE
+[token] PRINT
 [token] OTHER
+[token] IDENTIFIER
+[token] OTHER
+[debug] line 11: current_indent=0, new_indent=0, stack_top=1
+[token] NEWLINE
+[token] OTHER
+; Parsing successful, generating code...
+; Generated AST:
 Type: 0
-  Type: 2  val:x
-    Type: 38  val:1 (intValue: 0)
-  Type: 2  val:y
-    Type: 38  val:3 (intValue: 0)
-  Type: 2  val:z
-    Type: 31
-      Type: 43  val:x
-      Type: 43  val:y
+  Type: 2  val:temperature
+    Type: 38  val:38 (intValue: 0)
+  Type: 2  val:threshold
+    Type: 38  val:37 (intValue: 0)
+  Type: 2  val:alert
+    Type: 38  val:0 (intValue: 0)
   Type: 7
     Type: 28
-      Type: 43  val:z
-      Type: 38  val:3 (intValue: 0)
+      Type: 43  val:temperature
+      Type: 43  val:threshold
     Type: 0
-      Type: 2  val:z
-        Type: 33
-          Type: 43  val:z
-          Type: 38  val:2 (intValue: 0)
+      Type: 2  val:alert
+        Type: 38  val:1 (intValue: 0)
     Type: 12
       Type: 0
-        Type: 2  val:z
-          Type: 32
-            Type: 43  val:z
-            Type: 38  val:1 (intValue: 0)
+        Type: 2  val:alert
+          Type: 38  val:0 (intValue: 0)
+  Type: 19
+    Type: 43  val:alert
+; Generated symbol table
+
+; Symbol Table (Variable -> Stack Offset)
+
 ; Generated ARM assembly
 .section .text
 .global _start
 _start:
-  @ Assignment to variable 'x'
-  mov r0, #1
-  @ (Storing r0 to variable 'x')
-  @ Assignment to variable 'y'
-  mov r0, #3
-  @ (Storing r0 to variable 'y')
-  @ Assignment to variable 'z'
-  @ Load identifier 'x' (not implemented)
-  push {r0}
-  @ Load identifier 'y' (not implemented)
-  pop {r1}
-  add r0, r1, r0
-  @ (Storing r0 to variable 'z')
+  sub sp, sp, #256  @ Allocate stack frame
+  @ Assignment to variable 'temperature'
+  mov r0, #38
+  str r0, [sp, #224]  @ Store to variable 'temperature'
+  @ Assignment to variable 'threshold'
+  mov r0, #37
+  str r0, [sp, #228]  @ Store to variable 'threshold'
+  @ Assignment to variable 'alert'
+  mov r0, #0
+  str r0, [sp, #232]  @ Store to variable 'alert'
   @ If condition
-  @ Load identifier 'z' (not implemented)
-  push {r0}
-  mov r0, #3
-  pop {r1}
-  cmp r1, r0
-  movgt r0, #1
-  movle r0, #0
+  @ Unhandled AST node type 28
   cmp r0, #0
   beq ifend_1
-  @ Assignment to variable 'z'
-  @ Load identifier 'z' (not implemented)
-  push {r0}
-  mov r0, #2
-  pop {r1}
-  mul r0, r1, r0
-  @ (Storing r0 to variable 'z')
+  @ Assignment to variable 'alert'
+  mov r0, #1
+  str r0, [sp, #232]  @ Store to variable 'alert'
   b ifend_1
 ifend_1:
   @ Else block
-  @ Assignment to variable 'z'
-  @ Load identifier 'z' (not implemented)
-  push {r0}
-  mov r0, #1
-  pop {r1}
-  sub r0, r1, r0
-  @ (Storing r0 to variable 'z')
+  @ Assignment to variable 'alert'
+  mov r0, #0
+  str r0, [sp, #232]  @ Store to variable 'alert'
 ifend_1:
+  @ Print statement
+  ldr r0, [sp, #232]  @ Load identifier 'alert'
+  mov r1, r0
+  ldr r0, =msg
+  mov r2, #4
+  mov r7, #4  @ syscall write
+  svc #0
   mov r7, #1
   mov r0, #0
   svc #0

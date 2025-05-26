@@ -4,5 +4,7 @@
 #include "ast.h"
 
 void codegen(ASTNode *root);
+void print_symbol_table();
+
 
 #endif

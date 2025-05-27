@@ -65,8 +65,7 @@ void codegen(ASTNode *root)
     if (!root)
         return;
     
-    print_symbol_table();
-
+    
     printf(".section .text\n");
     printf(".global _start\n");
     printf("_start:\n");
@@ -80,6 +79,8 @@ void codegen(ASTNode *root)
     printf("  mov r7, #1\n");
     printf("  mov r0, #0\n");
     printf("  svc #0\n");
+
+    print_symbol_table();
 }
 
 void codegen_expression(ASTNode *node)

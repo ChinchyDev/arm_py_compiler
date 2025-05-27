@@ -73,9 +73,6 @@ Type: 0
     Type: 43  val:alert
 ; Generated symbol table
 ; Generated ARM assembly
-
-; Symbol Table (Variable -> Stack Offset)
-
 .section .text
 .global _start
 _start:
@@ -119,3 +116,9 @@ ifend_1:
   mov r7, #1
   mov r0, #0
   svc #0
+
+; Symbol Table (Variable -> Stack Offset)
+; temperature -> [sp, #224]
+; threshold -> [sp, #228]
+; alert -> [sp, #232]
+
